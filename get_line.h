@@ -1,0 +1,13 @@
+typedef struct {
+  char *data;
+  int size;
+} t_chunk;
+
+char *get_line();
+
+t_chunk *get_line_buffer(int mode);
+
+# define bool char
+
+# define GETLINE_GET_BUFFER 0
+# define GETLINE_DESTROY_BUFFER 1
