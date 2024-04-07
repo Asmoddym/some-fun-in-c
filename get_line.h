@@ -1,3 +1,6 @@
+#ifndef GET_LINE_H_
+# define GET_LINE_H
+
 typedef struct {
   char *data;
   int size;
@@ -11,3 +14,5 @@ t_chunk *get_line_buffer(int mode);
 
 # define GETLINE_GET_BUFFER 0
 # define GETLINE_DESTROY_BUFFER 1
+
+#endif

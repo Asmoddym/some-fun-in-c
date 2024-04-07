@@ -1,18 +1,10 @@
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "get_line.h"
+#include "my_perror.h"
 
-# define BUFFER_SIZE 2
-
-void initialize_buffer(t_chunk **buffer) {
-  if (*buffer == NULL) {
-    (*buffer) = malloc(sizeof(t_chunk));
-    (*buffer)->data = malloc(sizeof(char) * BUFFER_SIZE);
-    (*buffer)->data[0] = 0;
-  }
-}
+# define BUFFER_SIZE 256
 
 void write_to_buffer(t_chunk *buffer) {
   buffer->size = read(0, buffer->data, BUFFER_SIZE);
@@ -26,9 +18,7 @@ bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
   int size = 0;
   char *tmp;
 
-  for (; !is_delimiter(buffer->data[size]); size++);
-
-  // printf("Found buffer size: %d\n", size);
+  for (; size < BUFFER_SIZE && !is_delimiter(buffer->data[size]); size++);
 
   tmp = malloc(sizeof(char) * (size + 1));
   for (int i = 0; i < size; i++) {
@@ -36,19 +26,13 @@ bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
   }
   tmp[size] = 0;
 
-  // printf("-> <%s>\n", tmp);
+  int offset = (size == BUFFER_SIZE) || buffer->data[size] == 0 ? 0 : 1;
 
-  int offset = buffer->data[size] == 0 ? 0 : 1;
-
-  // printf("offset; %d, remaining: %d\n", offset, remaining_in_buffer);
-
-  for (int i = 0; buffer->data[size + offset + i] != 0; i++) {
+  for (int i = 0; size + offset + i < buffer->size && buffer->data[size + offset + i] != 0; i++) {
     buffer->data[i] = buffer->data[size + offset + i];
   }
   buffer->data[buffer->size - size - offset] = 0;
   buffer->size -= size + offset;
-
-  // printf("Next: <%s>, %d\n", buffer->data, buffer->size);
 
   chunk->data = tmp;
   chunk->size = size;
@@ -83,12 +67,17 @@ t_chunk *get_line_buffer(int mode) {
   static t_chunk *buffer = NULL;
 
   if (mode == GETLINE_GET_BUFFER) {
-    initialize_buffer(&buffer);
+    if (buffer == NULL) {
+      buffer = malloc(sizeof(t_chunk));
+      buffer->data = malloc(sizeof(char) * BUFFER_SIZE);
+      buffer->data[0] = 0;
+      buffer->size = 0;
+    }
   } else if (mode == GETLINE_DESTROY_BUFFER) {
     free(buffer->data);
     free(buffer);
   } else {
-    perror("Unhandled get_line mode");
+    my_perror("Unhandled get_line mode");
 
     exit(1);
   }
@@ -110,7 +99,6 @@ char *get_line() {
         break;
       }
     }
-
 
     delimiter_found = read_from_buffer(buffer, &chunk);
     append_to_line(&chunk, &line);

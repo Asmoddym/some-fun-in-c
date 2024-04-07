@@ -1,15 +1,19 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "get_line.h"
 
 int main() {
-  const char *a = get_line();
+  char *a = get_line();
   printf("%s, %lu\n", a == NULL ? "NULL" : a, a == NULL ? 0 : strlen(a));
+  free(a);
 
-a = get_line();
+  a = get_line();
   printf("%s, %lu\n", a == NULL ? "NULL" : a, a == NULL ? 0 : strlen(a));
+  free(a);
   a = get_line();
   printf("%s, %lu\n", a == NULL ? "NULL" : a, a == NULL ? 0 : strlen(a)); 
+  free(a);
 
   get_line_buffer(GETLINE_DESTROY_BUFFER);
   
