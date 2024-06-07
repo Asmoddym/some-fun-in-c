@@ -1,5 +1,5 @@
 #ifndef GET_LINE_H_
-# define GET_LINE_H
+# define GET_LINE_H_
 
 typedef struct {
   char *data;

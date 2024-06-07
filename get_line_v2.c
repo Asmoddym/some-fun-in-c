@@ -1,14 +1,11 @@
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "get_line.h"
 #include "my_perror.h"
 
 # define BUFFER_SIZE 256
-
-void write_to_buffer(t_chunk *buffer) {
-  buffer->size = read(0, buffer->data, BUFFER_SIZE);
-}
 
 bool is_delimiter(char c) {
   return c == 0 || c == '\n';
@@ -21,10 +18,7 @@ bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
   for (; size < BUFFER_SIZE && !is_delimiter(buffer->data[size]); size++);
 
   tmp = malloc(sizeof(char) * (size + 1));
-  for (int i = 0; i < size; i++) {
-    tmp[i] = buffer->data[i];
-  }
-  tmp[size] = 0;
+  strncpy(tmp, buffer->data, size);
 
   // offset is 1 if the delimiter is not at the end of the buffer
   int offset = (size == BUFFER_SIZE) || buffer->data[size] == 0 ? 0 : 1;
@@ -43,24 +37,10 @@ bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
 
 void append_to_line(const t_chunk *chunk, t_chunk *line) {
   int new_size = line->size + chunk->size;
-  char *new_data = malloc(sizeof(char) * (new_size) + 1);
 
-  for (int i = 0; i < line->size; i++) {
-    new_data[i] = line->data[i];
-  }
+  line->data = realloc(line->data, sizeof(char) * (new_size + 1));
 
-  for (int i = 0; i < chunk->size; i++) {
-    new_data[line->size + i] = chunk->data[i];
-  }
-  new_data[new_size] = 0;
-
-  free(chunk->data);
-
-  if (line->data != NULL) {
-    free(line->data);
-  }
-
-  line->data = new_data;
+  strcpy(line->data + line->size, chunk->data);
   line->size = new_size;
 }
 
@@ -94,7 +74,7 @@ char *get_line() {
 
   while (!delimiter_found) {
     if (buffer->size == 0) {
-      write_to_buffer(buffer);
+      buffer->size = read(0, buffer->data, BUFFER_SIZE);
 
       if (buffer->size == 0) {
         break;
