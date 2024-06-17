@@ -5,34 +5,43 @@
 #include "get_line.h"
 #include "my_perror.h"
 
+#include <stdio.h>
 # define BUFFER_SIZE 256
 
 bool is_delimiter(char c) {
   return c == 0 || c == '\n';
 }
 
-bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
+int buffer_data_size_to_copy(const t_chunk *buffer) {
   int size = 0;
-  char *tmp;
 
   for (; size < BUFFER_SIZE && !is_delimiter(buffer->data[size]); size++);
 
-  tmp = malloc(sizeof(char) * (size + 1));
-  strncpy(tmp, buffer->data, size);
+  return size;
+}
 
-  // offset is 1 if the delimiter is not at the end of the buffer
-  int offset = (size == BUFFER_SIZE) || buffer->data[size] == 0 ? 0 : 1;
+bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
+  int size = buffer_data_size_to_copy(buffer);
+  char *tmp = strncpy(malloc(sizeof(char) * (size + 1)), buffer->data, size);
 
-  for (int i = 0; size + offset + i < buffer->size && buffer->data[size + offset + i] != 0; i++) {
-    buffer->data[i] = buffer->data[size + offset + i];
-  }
-  buffer->data[buffer->size - size - offset] = 0;
-  buffer->size -= size + offset;
+  // If a delimiter was found, we need to skip it as it will be at the beginning of the future buffer.
+  // index_offset will equal 1 to allow the delimiter to be skipped.
+  int index_offset = (size == BUFFER_SIZE || buffer->data[size] == 0 ? 0 : 1);
+
+  // doesn't work if size == 0
+
+  int remaining_buffer_size = buffer->size - size - index_offset;
+  char *remaining_buffer_index = buffer->data + size + index_offset;
+
+  strncpy(buffer->data, remaining_buffer_index, remaining_buffer_size);
+  buffer->data[remaining_buffer_size] = 0;
+  buffer->size = remaining_buffer_size;
 
   chunk->data = tmp;
+  chunk->data[size] = 0;
   chunk->size = size;
 
-  return offset != 0;
+  return index_offset != 0;
 }
 
 void append_to_line(const t_chunk *chunk, t_chunk *line) {
