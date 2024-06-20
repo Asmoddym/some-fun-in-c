@@ -33,6 +33,8 @@ bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
   int remaining_buffer_size = buffer->size - size - index_offset;
   char *remaining_buffer_index = buffer->data + size + index_offset;
 
+  printf("%d, %d, <%s>, <%s> (%d)\n", size, remaining_buffer_size, buffer->data, remaining_buffer_index, strlen(remaining_buffer_index));
+
   strncpy(buffer->data, remaining_buffer_index, remaining_buffer_size);
   buffer->data[remaining_buffer_size] = 0;
   buffer->size = remaining_buffer_size;
