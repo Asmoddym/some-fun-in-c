@@ -28,16 +28,8 @@ bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
   // index_offset will equal 1 to allow the delimiter to be skipped.
   int index_offset = (size == BUFFER_SIZE || buffer->data[size] == 0 ? 0 : 1);
 
-  // doesn't work if size == 0
-
-  int remaining_buffer_size = buffer->size - size - index_offset;
-  char *remaining_buffer_index = buffer->data + size + index_offset;
-
-  printf("%d, %d, <%s>, <%s> (%d)\n", size, remaining_buffer_size, buffer->data, remaining_buffer_index, strlen(remaining_buffer_index));
-
-  strncpy(buffer->data, remaining_buffer_index, remaining_buffer_size);
-  buffer->data[remaining_buffer_size] = 0;
-  buffer->size = remaining_buffer_size;
+  buffer->data = buffer->data + size + index_offset;
+  buffer->size = buffer->size - size - index_offset;
 
   chunk->data = tmp;
   chunk->data[size] = 0;
@@ -61,12 +53,13 @@ t_chunk *get_line_buffer(int mode) {
   if (mode == GETLINE_GET_BUFFER) {
     if (buffer == NULL) {
       buffer = malloc(sizeof(t_chunk));
-      buffer->data = malloc(sizeof(char) * BUFFER_SIZE);
+      buffer->handle = malloc(sizeof(char) * BUFFER_SIZE);
+      buffer->data = buffer->handle;
       buffer->data[0] = 0;
       buffer->size = 0;
     }
   } else if (mode == GETLINE_DESTROY_BUFFER) {
-    free(buffer->data);
+    free(buffer->handle);
     free(buffer);
   } else {
     my_perror("Unhandled get_line mode");

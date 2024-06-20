@@ -2,6 +2,7 @@
 # define GET_LINE_H_
 
 typedef struct {
+  void *handle;
   char *data;
   int size;
 } t_chunk;
