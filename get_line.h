@@ -1,8 +1,10 @@
 #ifndef GET_LINE_H_
 # define GET_LINE_H_
 
+# define BUFFER_SIZE 256
+
 typedef struct {
-  void *handle;
+  char handle[BUFFER_SIZE];
   char *data;
   int size;
 } t_chunk;

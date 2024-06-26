@@ -6,7 +6,6 @@
 #include "my_perror.h"
 
 #include <stdio.h>
-# define BUFFER_SIZE 256
 
 bool is_delimiter(char c) {
   return c == 0 || c == '\n';
@@ -15,7 +14,7 @@ bool is_delimiter(char c) {
 int buffer_data_size_to_copy(const t_chunk *buffer) {
   int size = 0;
 
-  for (; size < BUFFER_SIZE && !is_delimiter(buffer->data[size]); size++);
+  for (; size < BUFFER_SIZE && size < buffer->size && !is_delimiter(buffer->data[size]); size++);
 
   return size;
 }
@@ -44,7 +43,9 @@ void append_to_line(const t_chunk *chunk, t_chunk *line) {
   line->data = realloc(line->data, sizeof(char) * (new_size + 1));
 
   strcpy(line->data + line->size, chunk->data);
+
   line->size = new_size;
+  free(chunk->data);
 }
 
 t_chunk *get_line_buffer(int mode) {
@@ -52,14 +53,10 @@ t_chunk *get_line_buffer(int mode) {
 
   if (mode == GETLINE_GET_BUFFER) {
     if (buffer == NULL) {
-      buffer = malloc(sizeof(t_chunk));
-      buffer->handle = malloc(sizeof(char) * BUFFER_SIZE);
+      buffer = calloc(sizeof(t_chunk), 1);
       buffer->data = buffer->handle;
-      buffer->data[0] = 0;
-      buffer->size = 0;
     }
   } else if (mode == GETLINE_DESTROY_BUFFER) {
-    free(buffer->handle);
     free(buffer);
   } else {
     my_perror("Unhandled get_line mode");
@@ -78,11 +75,14 @@ char *get_line() {
 
   while (!delimiter_found) {
     if (buffer->size == 0) {
+      buffer->data = buffer->handle;
       buffer->size = read(0, buffer->data, BUFFER_SIZE);
 
       if (buffer->size == 0) {
         break;
       }
+
+      buffer->data[buffer->size] = 0;
     }
 
     delimiter_found = read_from_buffer(buffer, &chunk);
