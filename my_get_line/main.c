@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "get_line.h"
+#include "my_get_line.h"
 
 int main() {
   // char *a = get_line();
@@ -18,7 +18,7 @@ int main() {
   char *a;
 
   while ((a = get_line()) != NULL) {
-    printf("%s, %lu\n", a, strlen(a));
+    printf("<%s>\n", a);
     free(a);
   }
 

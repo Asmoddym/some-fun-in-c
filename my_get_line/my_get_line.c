@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "get_line.h"
+#include "my_get_line.h"
 #include "my_perror.h"
 
 #include <stdio.h>
@@ -19,7 +19,7 @@ int buffer_data_size_to_copy(const t_chunk *buffer) {
   return size;
 }
 
-bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
+bool read_from_buffer_and_append_to_line(t_chunk *buffer, t_chunk *line) {
   int size = buffer_data_size_to_copy(buffer);
   char *tmp = strncpy(malloc(sizeof(char) * (size + 1)), buffer->data, size);
 
@@ -30,22 +30,25 @@ bool read_from_buffer(t_chunk *buffer, t_chunk *chunk) {
   buffer->data = buffer->data + size + index_offset;
   buffer->size = buffer->size - size - index_offset;
 
-  chunk->data = tmp;
-  chunk->data[size] = 0;
-  chunk->size = size;
+  line->data = realloc(line->data, sizeof(char) * (line->size + size + 1));
+  strcpy(line->data + line->size, tmp);
+  line->size += size;
+  free(tmp);
+
+  // static int total_size = 0;
+
+  // total_size += size;
+
+  // printf(">>>>>> %d, %d %d\n", total_size, buffer->size, size);
+
+  // static int i = 0;
+
+  // i++;
+
+  // if (i == 20)
+  // exit (1);
 
   return index_offset != 0;
-}
-
-void append_to_line(const t_chunk *chunk, t_chunk *line) {
-  int new_size = line->size + chunk->size;
-
-  line->data = realloc(line->data, sizeof(char) * (new_size + 1));
-
-  strcpy(line->data + line->size, chunk->data);
-
-  line->size = new_size;
-  free(chunk->data);
 }
 
 t_chunk *get_line_buffer(int mode) {
@@ -70,23 +73,19 @@ t_chunk *get_line_buffer(int mode) {
 char *get_line() {
   t_chunk *buffer =  get_line_buffer(GETLINE_GET_BUFFER);
   t_chunk line = { .data = NULL, .size = 0};
-  t_chunk chunk = { .data = NULL, .size = 0};
   bool delimiter_found = 0;
 
   while (!delimiter_found) {
-    if (buffer->size == 0) {
+    if (buffer->size <= 0) {
       buffer->data = buffer->handle;
       buffer->size = read(0, buffer->data, BUFFER_SIZE);
 
-      if (buffer->size == 0) {
+      if (buffer->size <= 0) {
         break;
       }
-
-      buffer->data[buffer->size] = 0;
     }
 
-    delimiter_found = read_from_buffer(buffer, &chunk);
-    append_to_line(&chunk, &line);
+    delimiter_found = read_from_buffer_and_append_to_line(buffer, &line);
   }
 
   return line.data;
