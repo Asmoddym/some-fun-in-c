@@ -18,7 +18,7 @@ int main() {
   char *a;
 
   while ((a = get_line()) != NULL) {
-    printf("<%s>\n", a);
+    printf("%s\n", a);
     free(a);
   }
 

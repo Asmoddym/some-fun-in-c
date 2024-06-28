@@ -22,10 +22,11 @@ int buffer_data_size_to_copy(const t_chunk *buffer) {
 bool read_from_buffer_and_append_to_line(t_chunk *buffer, t_chunk *line) {
   int size = buffer_data_size_to_copy(buffer);
   char *tmp = strncpy(malloc(sizeof(char) * (size + 1)), buffer->data, size);
+  tmp[size] = 0;
 
   // If a delimiter was found, we need to skip it as it will be at the beginning of the future buffer.
   // index_offset will equal 1 to allow the delimiter to be skipped.
-  int index_offset = (size == BUFFER_SIZE || buffer->data[size] == 0 ? 0 : 1);
+  int index_offset = size != buffer->size;
 
   buffer->data = buffer->data + size + index_offset;
   buffer->size = buffer->size - size - index_offset;
@@ -34,19 +35,6 @@ bool read_from_buffer_and_append_to_line(t_chunk *buffer, t_chunk *line) {
   strcpy(line->data + line->size, tmp);
   line->size += size;
   free(tmp);
-
-  // static int total_size = 0;
-
-  // total_size += size;
-
-  // printf(">>>>>> %d, %d %d\n", total_size, buffer->size, size);
-
-  // static int i = 0;
-
-  // i++;
-
-  // if (i == 20)
-  // exit (1);
 
   return index_offset != 0;
 }
